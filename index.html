@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Cursos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input,
+        button {
+            margin-bottom: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h1>Gerenciador de Cursos</h1>
+
+        <!-- Formulário para adicionar curso -->
+        <label for="cursoNome">Nome do Curso:</label>
+        <input type="text" id="cursoNome" required><br>
+        <button onclick="adicionarCurso()">Adicionar Curso</button>
+
+        <!-- Lista de cursos -->
+        <ul id="listaCursos"></ul>
+    </div>
+
+    <script>
+        var contadorId = 1;
+
+        function adicionarCurso() {
+            var cursoNome = document.getElementById('cursoNome').value;
+
+            if (cursoNome) {
+                fetch('http://localhost:3000/cursos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: cursoNome }),
+                })
+                    .then(response => response.json())
+                    .then(cursos => {
+                        atualizarListaCursos(cursos);
+                        document.getElementById('cursoNome').value = '';
+                        contadorId++;
+                    })
+                    .catch(error => console.error('Erro ao adicionar curso:', error));
+            }
+        }
+
+        function editarCurso(botao) {
+            var curso = botao.parentElement;
+            var novoNome = prompt('Editar nome do curso:', curso.innerText.split(': ')[1].split(' ')[0]);
+            if (novoNome) {
+                curso.innerHTML = curso.innerText.split(': ')[0] + ': ' + novoNome + ' <button onclick="editarCurso(this)">Editar</button> <button onclick="excluirCurso(this)">Excluir</button>';
+            }
+        }
+
+        function excluirCurso(botao) {
+            var curso = botao.parentElement;
+            curso.remove();
+        }
+
+        function atualizarListaCursos(cursos) {
+            var listaCursos = document.getElementById('listaCursos');
+            listaCursos.innerHTML = '';
+
+            cursos.forEach((curso, index) => {
+                var novoCurso = document.createElement('li');
+                novoCurso.innerHTML = index + ': ' + curso + ' <button onclick="editarCurso(this)">Editar</button> <button onclick="excluirCurso(this)">Excluir</button>';
+                listaCursos.appendChild(novoCurso);
+            });
+        }
+
+        // Função para carregar a lista de cursos quando a página é carregada
+        window.onload = function () {
+            fetch('http://localhost:3000/cursos')
+                .then(response => response.json())
+                .then(cursos => atualizarListaCursos(cursos))
+                .catch(error => console.error('Erro ao carregar lista de cursos:', error));
+        };
+    </script>
+
+</body>
+
+</html>
